@@ -23,6 +23,7 @@ object HandlerFactory {
             "project" -> {
                 return AndroidProjectHandler()
             }
+            // 暂时还不太想开发
             "application" -> {
                 return AndroidApplicationHandler()
             }
@@ -39,7 +40,7 @@ object HandlerFactory {
         return null
     }
 
-    private const val HElP_INFO = "1.Mebium module\r\n" +
+    private const val HElP_INFO = "1.impact module\r\n" +
             "创建安卓 module \r\n\r\n" +
-            "2.Mebium project\r\n" + "创建安卓 Project \r\n\r\n"
+            "2.impact project\r\n" + "创建安卓 Project \r\n\r\n"
 }
