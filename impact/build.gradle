@@ -1,0 +1,94 @@
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
+
+plugins {
+    id 'java-library'
+    id 'kotlin'
+    id 'application'
+    id 'com.github.johnrengelman.shadow' version '7.1.2'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+application {
+    mainClass = 'com.kronos.mebium.MyClass'
+}
+
+
+dependencies {
+    testImplementation 'junit:junit:4.13.2'
+    implementation "com.beust:jcommander:1.82"
+    implementation("org.yaml:snakeyaml:1.30")
+}
+
+def moduleTask = project.tasks.register("zipAndroidLib", ZipTask.class) {
+    it.library.set(file("../library"))
+    it.outputFile.set(file("./src/main/resources/zip/android/android.zip"))
+}
+
+def projectTask = project.tasks.register("zipAndroidProject", ZipTask.class) {
+    it.library.set(file("../project"))
+    it.outputFile.set(file("./src/main/resources/zip/android/project.zip"))
+}
+
+
+
+afterEvaluate {
+    project.tasks.findByName("compileJava").dependsOn(moduleTask)
+    project.tasks.findByName("compileJava").dependsOn(projectTask)
+}
+
+jar {
+    exclude("**/module-info.class")
+    /* from {
+         configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+     }*/
+    manifest {
+        attributes 'Main-Class': 'com.kronos.mebium.MyClass'
+    }
+}
+shadowJar {
+    archiveBaseName.set('mebium')
+}
+
+abstract class ZipTask extends DefaultTask {
+    @InputDirectory
+    Provider<File> library = project.objects.property(File)
+
+    @OutputFile
+    Provider<File> outputFile = project.objects.property(File)
+
+
+    @TaskAction
+    def doAction() {
+        def outputFile = outputFile.get()
+        createFileSafety(outputFile)
+        compress(library.get(), outputFile)
+    }
+
+    static File compress(final File srcDir, final File zipFile) {
+        ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFile))
+        srcDir.eachFileRecurse({
+            zos.putNextEntry(new ZipEntry(it.path - srcDir.path + (it.directory ? "/" : "")))
+            if (it.file) {
+                zos << it.bytes
+            }
+            zos.closeEntry()
+        })
+        zos.close()
+        return zipFile
+    }
+
+    private static File createFileSafety(File file) {
+        if (file.exists()) {
+            file.delete()
+        }
+        if (!file.getParentFile().exists()) {
+            file.getParentFile().mkdirs()
+        }
+        return file
+    }
+}

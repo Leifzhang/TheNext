@@ -1,0 +1,13 @@
+buildscript {
+
+    repositories {
+        google()
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath "com.android.tools.build:gradle:$version_build_gradle"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$version_kotlin"
+        classpath "org.jetbrains.kotlin:kotlin-serialization:$version_kotlin"
+    }
+}
