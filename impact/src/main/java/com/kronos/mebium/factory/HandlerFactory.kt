@@ -5,6 +5,7 @@ import com.kronos.mebium.action.Handler
 import com.kronos.mebium.android.AndroidApplicationHandler
 import com.kronos.mebium.android.AndroidModuleHandler
 import com.kronos.mebium.android.AndroidProjectHandler
+import com.kronos.mebium.android.DependenciesHandler
 import com.kronos.mebium.entity.CommandEntity
 
 /**
@@ -27,6 +28,9 @@ object HandlerFactory {
             "application" -> {
                 return AndroidApplicationHandler()
             }
+            "dependencies" -> {
+                return DependenciesHandler()
+            }
         }
         if (name == "--help") {
             //  val input = Scanner(System.`in`)
@@ -40,7 +44,6 @@ object HandlerFactory {
         return null
     }
 
-    private const val HElP_INFO = "1.impact module\r\n" +
-            "创建安卓 module \r\n\r\n" +
-            "2.impact project\r\n" + "创建安卓 Project \r\n\r\n"
+    private const val HElP_INFO =
+        "1.impact module\r\n" + "创建安卓 module \r\n\r\n" + "2.impact project\r\n" + "创建安卓 Project \r\n\r\n"
 }
