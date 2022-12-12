@@ -28,10 +28,13 @@ class Sample {
         val groupName = "com.kronos.common"
         Next.main(
             arrayOf(
-                "module", "android",
-                "-file", file.absolutePath,
-                "-name", moduleName,
-                "-group", groupName
+                "module",
+                "-file",
+                file.absolutePath,
+                "-name",
+                moduleName,
+                "-group",
+                groupName
             )
         )
     }
@@ -42,9 +45,19 @@ class Sample {
         val projectName = "freedom"
         Next.main(
             arrayOf(
-                "project", "android",
-                "-name", projectName,
-                "-file", file.absolutePath
+                "project", "-name", projectName, "-file", file.absolutePath
+            )
+        )
+    }
+
+
+    @Test
+    fun testGradleDepend() {
+        val file = File("../app/")
+        val projectName = "freedom"
+        Next.main(
+            arrayOf(
+                "dependencies", "-name", projectName, "-file", file.absolutePath
             )
         )
     }

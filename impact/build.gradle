@@ -24,6 +24,16 @@ dependencies {
     implementation("org.yaml:snakeyaml:1.30")
 }
 
+/*run {
+    standardInput = System.in
+}*/
+
+tasks {
+    run {
+        standardInput = System.in
+    }
+}
+
 def moduleTask = project.tasks.register("zipAndroidLib", ZipTask.class) {
     it.library.set(file("../library"))
     it.outputFile.set(file("./src/main/resources/zip/android/android.zip"))
@@ -33,7 +43,6 @@ def projectTask = project.tasks.register("zipAndroidProject", ZipTask.class) {
     it.library.set(file("../project"))
     it.outputFile.set(file("./src/main/resources/zip/android/project.zip"))
 }
-
 
 
 afterEvaluate {
