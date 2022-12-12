@@ -4,6 +4,9 @@ import com.beust.jcommander.JCommander
 import com.kronos.mebium.action.Handler
 import com.kronos.mebium.entity.CommandEntity
 import com.kronos.mebium.file.getRootProjectDir
+import com.kronos.mebium.utils.green
+import com.kronos.mebium.utils.red
+import com.kronos.mebium.utils.yellow
 import java.io.File
 import java.util.Scanner
 
@@ -15,16 +18,27 @@ import java.util.Scanner
  */
 class DependenciesHandler : Handler {
 
-
     val scanner = Scanner(System.`in`)
+    var isSkip = false
 
     override fun handle(args: Array<String>) {
+        isSkip = args.contains(skip)
+        val realArgs = if (isSkip) {
+            arrayListOf<String>().apply {
+                args.forEach {
+                    if (it != skip) {
+                        add(it)
+                    }
+                }
+            }.toTypedArray()
+        } else {
+            args
+        }
         val commandEntity = CommandEntity()
-        JCommander.newBuilder().addObject(commandEntity).build().parse(*args)
+        JCommander.newBuilder().addObject(commandEntity).build().parse(*realArgs)
         val first = commandEntity.file
         val name = commandEntity.name
-        val pwd = first
-        val root = pwd.getRootProjectDir() ?: return
+        val root = first
         val files = root.walkTopDown().filter {
             it.isFile && it.name.contains(".gradle")
         }
@@ -38,21 +52,24 @@ class DependenciesHandler : Handler {
     }
 
     private fun confirm(overrideList: MutableList<Pair<File, File>>) {
-        println("if you want overwrite all this file ? input y to confirm \r\n")
+        if (overrideList.isEmpty()) {
+            return
+        }
+        println("if you want overwrite all this file ? input y to confirm \r\n".red())
         val input = scanner.next()
         if (input == "y") {
             overrideList.forEach {
                 it.first.delete()
                 it.second.renameTo(it.first)
             }
-            print("replace success \r\n ")
+            print("replace success \r\n ".green())
         } else {
-            print("skip\r\n ")
+            print("skip\r\n ".yellow())
         }
     }
 
     private val pattern =
-        "(\\D\\S*)(implementation|Implementation|compileOnly|CompileOnly|test|Test|api|Api)([ (])(\\D\\S*)".toPattern()
+        "(\\D\\S*)(implementation|Implementation|compileOnly|CompileOnly|test|Test|api|Api|kapt|Kapt|Processor)([ (])(\\D\\S*)".toPattern()
 
     private fun onGradleCheck(file: File): File? {
         var override = false
@@ -62,18 +79,31 @@ class DependenciesHandler : Handler {
             val matcher = pattern.matcher(line)
             if (matcher.find()) {
                 val libs = matcher.group(4)
-                if (!libs.contains(":")) {
-                    val newLibs = libs.replace("\'", "").replace("\"", "").replace("-", ".")
-                    print("fileName: ${file.name} dependencies :  $libs do you want replace to $newLibs  ? input  y to replace  \r\n ")
+                if (!libs.contains(":") && !libs.contains("files(")) {
+                    val newLibs =
+                        libs.replace("\'", "").replace("\"", "").replace("-", ".").replace("_", ".")
+                            .replace("kotlin.libs", "kotlinlibs").replace("[", ".").replace("]", "")
+                    if (newLibs == libs) {
+                        newLines.add(line)
+                        return@forEach
+                    }
+                    print("fileName: ${file.name} dependencies : $line \r\n")
+                    if (isSkip) {
+                        override = true
+                        newLines.add(line.replace(libs, newLibs))
+                        print("$libs do you want replace to $newLibs    \r\n ".green())
+                        return@forEach
+                    }
+                    print("$libs do you want replace to $newLibs  ? input  y to replace  \r\n ".red())
                     while (true) {
                         val input = scanner.next()
                         if (input == "y") {
-                            print("replace success\r\n")
+                            print("replace success\r\n".green())
                             override = true
                             newLines.add(line.replace(libs, newLibs))
                             return@forEach
                         } else {
-                            print("skip\r\n ")
+                            print("skip\r\n ".yellow())
                             break
                         }
                     }
@@ -91,3 +121,5 @@ class DependenciesHandler : Handler {
         return null
     }
 }
+
+const val skip = "--skip"
